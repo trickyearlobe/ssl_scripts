@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+if [ "$1" == "" ];
+then
+  echo "Must supply an fqdn for the server that needs a certificate request"
+  exit 255
+else
+  fqdn=$1
+  subject="/CN=$fqdn"
+fi
+
+# Generate a private key if we don't have one
+if [ -f $fqdn.key ];
+  then
+    echo "Private key $fqdn.key exists... skipping"
+  else
+    echo "generating private key $fqdn.key"
+    openssl genrsa -out $fqdn.key 2048 -nodes
+fi
+
+# Generate a CSR if we don't have one
+if [ -f $fqdn.csr ];
+  then
+    echo "Certificate signing request $fqdn.csr exists... skipping"
+  else
+    echo "generating certificate signing request $fqdn.csr"
+    echo "subject is $subject"
+    openssl req -new -sha256 -key $fqdn.key -out $fqdn.csr -subj $subject
+fi
+
+# Verify the CSR
+echo "Verifying certificate signing request"
+echo .
+openssl req -noout -text -in $fqdn.csr
